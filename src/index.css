@@ -1,0 +1,20 @@
+@import url("https://use.typekit.net/lha1aph.css");
+@import "tailwindcss";
+
+@theme {
+  --color-souls-abyss: #0a0a0a;
+  --color-souls-stone: #1f1e1b;
+  --color-souls-estus: #d4af47;
+  --color-souls-health: #8a0303;
+  --color-souls-paper: #d1d1c4;
+
+  --font-serif: "trajan-pro-3", serif;
+  --font-sans: "Inter", sans-serif
+}
+
+body {
+  background-color: var(--color-souls-abyss);
+  color: var(--color-souls-paper);
+  font-family: var(--font-serif);
+}
+
