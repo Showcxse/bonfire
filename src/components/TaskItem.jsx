@@ -1,89 +1,147 @@
-import { motion } from 'framer-motion'
+import { motion } from "framer-motion";
+
+export const getPriorityColors = (prio) => {
+  switch (prio) {
+    case "High":
+      return 'text-red-500 border-red-900/50 bg-souls-health/30';
+    case "Medium":
+      return 'text-souls-estus border-souls-estus/40 bg-souls-estus/10';
+    default:
+      return 'text-souls-stamina border-souls-stamina/40 bg-souls-stamina/10';
+  }
+}
+
+export const formatDueDate = (dateStr) => {
+  if (!dateStr) return null;
+
+  const [year, month, day] = dateStr.split("-");
+  const dueDate = new Date(year, month -1, day);
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const diffTime = dueDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return { text: 'Hollowed', color: 'text-red-500' };
+  if (diffDays === 0) return { text: 'Fades Today', color: 'text-souls-estus animate-pulse' };
+  if (diffDays === 1) return { text: 'Fades Tomorrow', color: 'text-souls-paper/80' };
+  return { text: `Fades in ${diffDays} days`, color: 'text-souls-paper/40' };
+
+}
+
 
 const TaskItem = ({ task, onToggle, onInspect, isCompleting }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20}}
-      animate ={
-        isCompleting ? {
-          scale: 0.9,
-          opacity: 0,
-          y: -40,
-          filter: 'blur(12px) brightness(1.5) sepia(1) hue-rotate(-40deg) saturate(6)'
+      initial={{ opacity: 0, y:50 }}
+      whileInView={{ opacity: 1, y: 0}}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.6, ease: "easeOut"}}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={
+          isCompleting
+            ? {
+                scale: 0.9,
+                opacity: 0,
+                y: -40,
+                filter:
+                  "blur(12px) brightness(1.5) sepia(1) hue-rotate(-40deg) saturate(6)",
+              }
+            : {
+                scale: 1,
+                opacity: 1,
+                y: 0,
+                filter:
+                  "blur(0px) brightness(1) sepia(0) hue-rotate(0deg) saturate(1)",
+              }
         }
-        : {
-          scale: 1,
-          opacity: 1,
-          y: 0,
-          filter: 'blur(0px) brightness(1) sepia(0) hue-rotate(0deg) saturate(1)'
+        transition={
+          isCompleting
+            ? { duration: 1.2, ease: "easeIn" }
+            : { duration: 0.6, ease: "easeOut" }
         }
-      }
-      transition= {
-        isCompleting ? { duration: 1.2, ease: 'easeIn' }
-        : {duration: 0.6, ease: 'easeOut'}
-      }
-      onClick={onInspect}
-      className='overflow-hidden min-h-full group relative border border-souls-stone bg-[#141412] p-5 cursor-pointer hover:border-souls-estus/50 transition-colors duration-300'
-    >
+        onClick={onInspect}
+        className="overflow-hidden min-h-full group relative border border-souls-stone bg-[#141412] p-5 cursor-pointer hover:border-souls-estus/50 transition-colors duration-300"
+      >
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-80 transition-opacity duration-500"
+          style={{ backgroundImage: `url(${task.imageBg})` }}
+        ></div>
 
-    <div 
-      className="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-80 transition-opacity duration-500"
-      style={{ backgroundImage: `url(${task.imageBg})`}}
-    ></div>
+        <div className="absolute inset-0 bg-linear-to-t from-black via-black/80 to-transparent"></div>
 
-    <div className="absolute inset-0 bg-linear-to-t from-black via-black/80 to-transparent"></div>
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex flex-col flex-1">
+            <div className="mb-2 flex items-center gap-3">
+              <span className={`text-[10px] uppercase tracking-wider px-2 py-1 border ${getPriorityColors(task.priority)}`}>
+                {task.priority}
+              </span>
+              {task.dueDate && (() => {
+                const dueInfo = formatDueDate(task.dueDate);
+                return (
+                  <span className={`text-[10px] uppercase tracking-wider font-serif ${dueInfo.color}`}>
+                    {dueInfo.text}
+                  </span>
+                );
+              })()}
+            </div>
+            <span className="text-lg  group-hover:text-souls-estus transition-colors duration-300">
+              {task.title}
+            </span>
 
-    <div className="relative z-10 flex items-center justify-between">
-      <div className="flex flex-col flex-1">
-        <span className="text-lg  group-hover:text-souls-estus transition-colors duration-300">
-            {task.title}
-        </span>
-
-        {task.description && (
-          <p className='mt-2 text-sm text-souls-paper/80 line-clamp-2 leading-relaxed italic'>
-            "{task.description}"
-          </p>
-        )}
-      </div>
-        {/*CHECKBOX*/}
-        <div 
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggle();
-          }}
-          className="relative shrink-0 w-6 h-6 border border-souls-paper/30 group-hover:border-souls-estus/50 rotate-45 transition-all duration-300"
+            {task.description && (
+              <p className="mt-2 text-sm text-souls-paper/80 line-clamp-2 leading-relaxed italic">
+                "{task.description}"
+              </p>
+            )}
+          </div>
+          {/*CHECKBOX*/}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle();
+            }}
+            className="relative shrink-0 w-6 h-6 border border-souls-paper/30 group-hover:border-souls-estus/50 rotate-45 transition-all duration-300"
           >
             {(isCompleting || task.completed) && (
               <motion.svg
-                className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 -rotate-45 pointer-events-none'
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 -rotate-45 pointer-events-none"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="url(#slashGradient)"
                 strokeWidth="3.5"
                 strokeLinecap="round"
-                >
-                  <defs>
-                    <linearGradient id='slashGradient' x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#EAC392" />
-                      <stop offset="30%" stopColor="#d48e37" />
-                      <stop offset="100%" stopColor="#7c2d12" />
-                    </linearGradient>
-                  </defs>
-                  <motion.path
-                    d="M 3 5 Q 14 12 21 20"
-                    initial={{ pathLength: task.completed ? 1 : 0}}
-                    animate={{ pathLength: 1}}
-                    transition={{ duration: 0.15, ease: 'easeIn' }}
-                  />
-                </motion.svg>
+              >
+                <defs>
+                  <linearGradient
+                    id="slashGradient"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
+                    <stop offset="0%" stopColor="#EAC392" />
+                    <stop offset="30%" stopColor="#d48e37" />
+                    <stop offset="100%" stopColor="#7c2d12" />
+                  </linearGradient>
+                </defs>
+                <motion.path
+                  d="M 3 5 Q 14 12 21 20"
+                  initial={{ pathLength: task.completed ? 1 : 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.15, ease: "easeIn" }}
+                />
+              </motion.svg>
             )}
+          </div>
         </div>
-    </div>
 
-    <div className="absolute bottom-0 left-0 h-px w-0 bg-souls-estus group-hover:w-full transition-all duration-500 ease-in-out"></div>
+        <div className="absolute bottom-0 left-0 h-px w-0 bg-souls-estus group-hover:w-full transition-all duration-500 ease-in-out"></div>
+      </motion.div>
     </motion.div>
+  );
+};
 
-  )
-}
-
-export default TaskItem
+export default TaskItem;

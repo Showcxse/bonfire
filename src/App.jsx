@@ -1,21 +1,88 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import TaskItem from "./components/TaskItem";
 import TaskModal from "./components/TaskModal";
+import PriorityMenu from "./components/PriorityMenu";
+import DatePicker from "./components/DatePicker";
 import CompletedBanner from "./components/CompletedBanner";
+import EmberBackground from "./components/EmberBackground";
+
+import { soulsborneBackgrounds } from "./assets/assets.js";
+import { errorBoundaryAssets } from "./assets/assets.js";
+
+//ERROR BOUNDARY BECAUSE AS I WORK ON THIS MORE AND MORE I REALIZE MY DUMBAHH
+const globalErrorAudio = new Audio(errorBoundaryAssets.errorSound);
+function ErrorFallback({ error, resetErrorBoundary }) {
+
+  useEffect(() => {
+    if (globalErrorAudio.paused) {
+      globalErrorAudio.currentTime = 0;
+      globalErrorAudio.play().catch((err) => {
+        console.warn('Code so bad even the error sound does not work', err);
+      });
+    }
+    // on the highly unlikely chance it clicking try again actually fixes it
+    return () => {
+      globalErrorAudio.pause();
+    };
+  }, []);
+
+  return (
+  <div role='alert' className='flex flex-col items-center justify-center py-20 bg-red-50 dark:bg-red-950/20 rounded-3xl border border-red-200'>
+    <p className='text-xl font-bold text-red-600 mb-4'>Sowwy something went wong with our services</p>
+    <img src={errorBoundaryAssets.errorImage} alt="visualized error" className='w-48 mb-6' />
+    <pre className='text-xs text-red-400 bg-black/5 p-4 rounded-lg mb-6'>
+      {error.message}
+    </pre>
+    <button 
+    onClick={resetErrorBoundary}
+    className='px-8 py-2 bg-red-600 text-white rounded-full font-bold hover:bg-red-700 transition-colors'
+    >Twy Again
+    </button>
+  </div>
+
+  )
+}
+
+//ACTUAL APP STARTS HERE
 
 const App = () => {
-  const [tasks, setTasks] = useState([
-    { id: 1, title: "Build bonfire task tracker app", completed: false },
-    { id: 2, title: "Lift dumbbells", completed: false },
-  ]);
+  const [formKey, setFormKey] = useState(0);
+
+
+  //vibed some placeholders so I can test stuff
+  const [tasks, setTasks] = useState(() => {
+    const initialQuests = [
+      { title: "Defeat the Taurus Demon", desc: "He guards the wall of the Undead Burg." },
+      { title: "Ring the Bell of Awakening", desc: "High above in the Undead Parish." },
+      { title: "Traverse Blighttown", desc: "Prepare for toxicity, framerate drops, and despair." },
+      { title: "Kindle the Firelink Shrine", desc: "Offer humanity to strengthen the flame." },
+      { title: "Explore the Depths", desc: "Beware the Basilisk curses in the sewers." },
+      { title: "Slay the Gaping Dragon", desc: "A terrifying maw awaits in the lowest depths." },
+      { title: "Navigate Sen's Fortress", desc: "A funhouse of traps, swinging axes, and serpent men." },
+      { title: "Discover Anor Londo", desc: "The city of the gods, bathed in eternal sunlight." },
+      { title: "Defeat Ornstein & Smough", desc: "The ultimate test of endurance and spatial awareness." },
+      { title: "Obtain the Lordvessel", desc: "The key to unlocking the sealed areas of Lordran." }
+    ];
+
+    return initialQuests.map(quest => ({
+      id: crypto.randomUUID(),
+      title: quest.title,
+      description: quest.desc,
+      imageBg: soulsborneBackgrounds[Math.floor(Math.random() * soulsborneBackgrounds.length)],
+      completed: false,
+      priority: ["High", "Medium", "Low"][Math.floor(Math.random() * 3)],
+      dueDate: ""
+    }));
+  });
 
   const [bannerText, setBannerText] = useState(null);
   const [taskCompleteId, setTaskCompleteId] = useState(null);
   const [inspectedTask, setInspectedTask] = useState(null);
+  const [newTaskPriority, setNewTaskPriority] = useState("Low");
+  const [newTaskDate, setNewTaskDate] = useState("");
 
 
-  const imagesGlob = import.meta.glob('./assets/backgrounds/*.{png,jpg,jpeg}', { eager: true, import: 'default'});
-  const soulsborneBackgrounds = Object.values(imagesGlob);
 
   const addTask = (event) => {
     event.preventDefault();
@@ -35,9 +102,12 @@ const App = () => {
       description: taskDesc,
       imageBg: randomBg,
       completed: false,
+      priority: newTaskPriority,
+      dueDate: newTaskDate,
     };
 
     setTasks([...tasks, newTask]);
+    setNewTaskDate("");
     form.reset();
   };
 
@@ -59,9 +129,9 @@ const App = () => {
 
   };
 
-  const updateTask = (taskId, newTitle, newDesc) => {
+  const updateTask = (taskId, newTitle, newDesc, newPriority, newDate) => {
     setTasks(currentTasks => currentTasks.map(task => 
-      task.id === taskId ? {...task, title: newTitle, description: newDesc} : task
+      task.id === taskId ? {...task, title: newTitle, description: newDesc, priority: newPriority, dueDate: newDate} : task
     ));
   };
 
@@ -70,10 +140,12 @@ const App = () => {
 
   return (
     <>
-      <main className="min-h-screen bg-souls-abyss font-serif p-6 flex flex-col items-center">
+      <main className="min-h-screen font-serif p-6 flex flex-col items-center relative overflow-hidden">
 
         <CompletedBanner text={bannerText} />
 
+        <EmberBackground />
+        <div className="pointer-events-none fixed inset-0 z-0 hidden lg:block bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.9)_100%)]"></div>
         <TaskModal
           task={inspectedTask}
           onClose={() => setInspectedTask(null)}
@@ -82,7 +154,8 @@ const App = () => {
         />
 
         <header className="mb-12 mt-16 text-center">
-          <h1 className="text-4xl md:text-6xl text-souls-estus uppercase tracking-wide leading-relaxed border-y border-souls-stone [text-shadow:0_0_3px_#d48e37,0_0_15px_rgba(212,175,55,0.6)]">
+
+          <h1 className="relative z-10 text-4xl md:text-6xl text-souls-estus uppercase tracking-wide leading-relaxed border-y border-souls-stone [text-shadow:0_0_3px_#d48e37,0_0_15px_rgba(212,175,55,0.6)]">
             Bonfire Lit
           </h1>
           <p className="mt-4 text-sm tracking-wider opacity-70">
@@ -90,21 +163,39 @@ const App = () => {
           </p>
         </header>
         {/*FORM TO ADD NEW STUFF */}
-        <form onSubmit={addTask} className="w-full max-w-2xl mb-8 flex flex-col gap-4 border border-souls-stone p-6 bg-souls-abyss/60">
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          onReset={() => {
+            setFormKey((prevKey) => prevKey +1);
+          }}
+        >
+        <form 
+          onSubmit={addTask} 
+          className="w-full max-w-2xl mb-8 flex flex-col gap-4 border border-souls-stone p-6 bg-souls-abyss/60"
+          key={formKey}
+        >
           <input
             type="text"
             name="taskTitle"
             placeholder="Enter a new task"
             autoComplete="off"
-            className="w-full bg-transparent border-b border-souls-stone text-souls-paper p-2 focus:outline-none focus:border-souls-estus transition-colors placeholder:opacity-40 font-serif text-xl md:text-2xl"
+            className="w-full bg-transparent border-b border-souls-stone text-souls-paper p-2 focus:outline-none focus:border-souls-estus transition-colors font-serif text-xl md:text-2xl duration-500"
           />
           <textarea
             name='taskDesc'
             placeholder='Enter task details (optional)...'
             rows='2'
-            className="w-full bg-transparent border-b border-souls-stone text-souls-paper p-2 focus:outline-none focus:border-souls-estus transition-colors placeholder:opacity-40 font-serif text-md resize-none">
+            className="w-full bg-transparent border-b border-souls-stone text-souls-paper p-2 focus:outline-none focus:border-souls-estus transition-colors font-serif text-md resize-none duration-500">
           </textarea>
-          <div className="flex justify-end mt-2">
+          <div className="flex justify-between mt-2">
+            <PriorityMenu 
+              value={newTaskPriority} 
+              onChange={(prio) => setNewTaskPriority(prio)}
+            />
+            <DatePicker
+              value={newTaskDate}
+              onChange={(date) => setNewTaskDate(date)}
+            />
           <button
             type="submit"
             className="px-8 py-2 border border-souls-stone text-souls-paper hover:text-souls-abyss hover:bg-souls-estus hover:border-souls-estus transition-all duration-300 uppercase tracking-wider text-sm cursor-pointer"
@@ -114,8 +205,10 @@ const App = () => {
           </div>
 
         </form>
+        </ErrorBoundary>
+        <h3 className="text-souls-estus/90 uppercase text-sm mb-6 text-center">Active Quests</h3>
 
-        <div className="w-full max-w-2xl space-y-4">
+        <div className="w-full max-w-2xl space-y-4 pb-32 ">
           {/* THROW ALL THE TASKS HERE FOR NOW IDK WHERE TO PUT THEM YET TBH
                 NOTE FOR FUTURE ME: MAYBE HAVE HERO / LOADER SCREEN FIRST?
             */}
@@ -138,7 +231,7 @@ const App = () => {
 
           {completedTasks.length > 0 && (
             <div className="mt-12 pt-8 border-t border-souls-stone/30">
-              <h3 className="text-souls-estus/50 uppercase text-sm mb-6 text-center">Completed Quests</h3>
+              <h3 className="text-souls-estus/80 uppercase text-sm mb-6 text-center">Completed Quests</h3>
               <div className="space-y-4 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
                 {completedTasks.map((task) => (
                   <TaskItem

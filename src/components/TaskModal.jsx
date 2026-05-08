@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import CompletedBanner from "./CompletedBanner"
+import { getPriorityColors } from "./TaskItem";
+import PriorityMenu from "./PriorityMenu";
 
 const TaskModal = ({ task, onClose, onUpdate, onComplete }) => {
 
   const [activeTask, setActiveTask] = useState(null);
-
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
   const [editedDesc, setEditedDesc] = useState("");
+  const [editedPriority, setEditedPriority] = useState("Low");
   useEffect(() => {
     if (task) {
       document.body.style.overflow = "hidden";
       setActiveTask(task);
       setEditedTitle(task.title);
       setEditedDesc(task.description || "");
+      setEditedPriority(task.priority || "Low");
       setIsEditing(false);
     } else {
       document.body.style.overflow = "unset";
@@ -25,7 +29,13 @@ const TaskModal = ({ task, onClose, onUpdate, onComplete }) => {
 
   const handleSave = () => {
     if (!editedTitle.trim()) return;
-    onUpdate(activeTask?.id, editedTitle, editedDesc);
+    onUpdate(activeTask?.id, editedTitle, editedDesc, editedPriority);
+    setActiveTask(prevTask => ({
+      ...prevTask,
+      title: editedTitle,
+      description: editedDesc,
+      priority: editedPriority,
+    }));
     setIsEditing(false);
   };
 
@@ -65,12 +75,19 @@ const TaskModal = ({ task, onClose, onUpdate, onComplete }) => {
             <div className="relative z-10 p-8 flex flex-col gap-6 -mt-16">
               {isEditing ? (
                 <>
+                <div className="flex items-center">
+                    <span className={`text-xs uppercase tracking-wide px-3 py-1 border shadow-md ${getPriorityColors(editedPriority)} `}>
+                      {editedPriority === "High" ? "Lord of Cinder (High)" : editedPriority === "Medium" ? "Elite (Medium)" : "Hollow (Low)"}
+                    </span>
+                </div>
                   <textarea
-                    rows={editedTitle.length > 25 ? 2 : 1}
+                    rows={editedTitle.length > 18 ? 2 : 1}
                     value={editedTitle}
                     onChange={(e) => setEditedTitle(e.target.value)}
-                    className='w-full bg-transparent text-3xl md:text-5xl font-serif text-souls-estus tracking-wide drop-shadow-md border-b border-souls-stone/50 pb-6 focus:outline-none resize-none focus:border-souls-estus/50 transition-colors'
+                    className='w-full h-full bg-transparent text-3xl md:text-5xl font-serif text-souls-estus tracking-wide drop-shadow-md border-b border-souls-stone/50 pb-6 focus:outline-none resize-none focus:border-souls-estus/50 transition-colors'
                   ></textarea>
+
+
                   <div className="min-h-30">
                   <textarea
                     rows="4"
@@ -83,6 +100,12 @@ const TaskModal = ({ task, onClose, onUpdate, onComplete }) => {
                 </>
               ) : (
                 <>
+                  <div className="flex items-center">
+                    <span className={`text-xs uppercase tracking-wide px-3 py-1 border shadow-md ${getPriorityColors(activeTask.priority)} `}>
+                      {activeTask.priority === "High" ? "Lord of Cinder (High)" : activeTask.priority === "Medium" ? "Elite (Medium)" : "Hollow (Low)"}
+                    </span>
+                  </div>
+
                   <h2 className="text-3xl md:text-5xl font-serif text-souls-estus tracking-wide drop-shadow-md border-b border-souls-stone/50 pb-6">
                     {activeTask.title}
                   </h2>
@@ -103,12 +126,19 @@ const TaskModal = ({ task, onClose, onUpdate, onComplete }) => {
 
               <div className="flex justify-between items-end mt-4 pt-6 border-t border-souls-stone/30">
                 {!activeTask.completed ? (
+                  isEditing ? (
+                    <PriorityMenu
+                      value={editedPriority}
+                      onChange={(prio) => setEditedPriority(prio)}
+                    />
+                  ) : (
                 <button
                   onClick={handleComplete}
                   className="px-6 py-2 border border-souls-estus text-souls-estus hover:bg-souls-estus hover:text-souls-abyss transition-all duration-300 uppercase tracking-wide text-sm cursor-pointer shadow-[0_0_10px_rgba(212,175,55,0.2)]"
                 >
                   Complete Quest
                 </button>
+                  )
                 ) : ( 
                   <div></div>
                 )}

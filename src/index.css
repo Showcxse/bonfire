@@ -6,6 +6,7 @@
   --color-souls-stone: #1f1e1b;
   --color-souls-estus: #d4af47;
   --color-souls-health: #8a0303;
+  --color-souls-stamina: #147c32;
   --color-souls-paper: #d1d1c4;
 
   --font-serif: "trajan-pro-3", serif;
@@ -16,5 +17,24 @@ body {
   background-color: var(--color-souls-abyss);
   color: var(--color-souls-paper);
   font-family: var(--font-serif);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a var(--color-souls-abyss);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: var(--color-souls-abyss);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border: 1px solid var(--color-souls-estus);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-souls-estus);
 }
 
