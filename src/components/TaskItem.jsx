@@ -25,8 +25,8 @@ export const formatDueDate = (dateStr) => {
 
   if (diffDays < 0) return { text: 'Hollowed', color: 'text-red-500' };
   if (diffDays === 0) return { text: 'Fades Today', color: 'text-souls-estus animate-pulse' };
-  if (diffDays === 1) return { text: 'Fades Tomorrow', color: 'text-souls-paper/80' };
-  return { text: `Fades in ${diffDays} days`, color: 'text-souls-paper/40' };
+  if (diffDays === 1) return { text: 'Fades Tomorrow', color: 'text-souls-paper' };
+  return { text: `Fades in ${diffDays} days`, color: 'text-souls-paper' };
 
 }
 

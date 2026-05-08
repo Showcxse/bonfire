@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CompletedBanner from "./CompletedBanner"
-import { getPriorityColors } from "./TaskItem";
 import PriorityMenu from "./PriorityMenu";
+import DatePicker from './DatePicker';
+import { getPriorityColors, formatDueDate } from "./TaskItem";
+
 
 const TaskModal = ({ task, onClose, onUpdate, onComplete }) => {
 
@@ -11,6 +13,7 @@ const TaskModal = ({ task, onClose, onUpdate, onComplete }) => {
   const [editedTitle, setEditedTitle] = useState("");
   const [editedDesc, setEditedDesc] = useState("");
   const [editedPriority, setEditedPriority] = useState("Low");
+  const [editedDate, setEditedDate] = useState("");
   useEffect(() => {
     if (task) {
       document.body.style.overflow = "hidden";
@@ -29,12 +32,13 @@ const TaskModal = ({ task, onClose, onUpdate, onComplete }) => {
 
   const handleSave = () => {
     if (!editedTitle.trim()) return;
-    onUpdate(activeTask?.id, editedTitle, editedDesc, editedPriority);
+    onUpdate(activeTask?.id, editedTitle, editedDesc, editedPriority, editedDate);
     setActiveTask(prevTask => ({
       ...prevTask,
       title: editedTitle,
       description: editedDesc,
       priority: editedPriority,
+      dueDate: editedDate,
     }));
     setIsEditing(false);
   };
@@ -75,101 +79,106 @@ const TaskModal = ({ task, onClose, onUpdate, onComplete }) => {
             <div className="relative z-10 p-8 flex flex-col gap-6 -mt-16">
               {isEditing ? (
                 <>
-                <div className="flex items-center">
-                    <span className={`text-xs uppercase tracking-wide px-3 py-1 border shadow-md ${getPriorityColors(editedPriority)} `}>
-                      {editedPriority === "High" ? "Lord of Cinder (High)" : editedPriority === "Medium" ? "Elite (Medium)" : "Hollow (Low)"}
+                <PriorityMenu
+                  value={editedPriority}
+                  onChange={(prio) => setEditedPriority(prio)}
+                />
+                <DatePicker
+                  value={editedDate}
+                  onChange={(date) => setEditedDate(date)}
+                />
+                </>
+              ) : (
+                <>
+                <span className={`w-fit text-xs uppercase tracking-wide px-3 py-1 border shadow-md ${getPriorityColors(activeTask.priority)}`}>
+                  {activeTask.priority === 'High' ? 'Lord of Cinder (High)' : activeTask.priority === 'Medium' ? 'Elite (Medium)' : 'Hollow (Low)' }
+                </span>
+
+                {activeTask.dueDate && (() => {
+                  const dueInfo = formatDueDate(activeTask.dueDate);
+                  return (
+                    <span className={`w-fit text-xs uppercase tracking-wider font-serif ${dueInfo.color}`}>
+                      {dueInfo.text}
                     </span>
-                </div>
-                  <textarea
-                    rows={editedTitle.length > 18 ? 2 : 1}
-                    value={editedTitle}
-                    onChange={(e) => setEditedTitle(e.target.value)}
-                    className='w-full h-full bg-transparent text-3xl md:text-5xl font-serif text-souls-estus tracking-wide drop-shadow-md border-b border-souls-stone/50 pb-6 focus:outline-none resize-none focus:border-souls-estus/50 transition-colors'
-                  ></textarea>
+                  );
+                })()}
+                </>
+              )}
 
-
-                  <div className="min-h-30">
+              {isEditing ? (
+                <textarea
+                  rows={editedTitle.length > 18 ? 2 : 1}
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                  className='w-full bg-transparent text-3xl md:text-5xl font-serif text-souls-estus tracking-wide drop-shadow-md border-b border-souls-stone/50 pb-6 focus:outline-none resize-none focus:border-souls-estus/70 transition-colors duration-250'
+                  >
+                </textarea>
+              ) : (
+                <h2 className="text-3xl md:text-5xl font-serif text-souls-estus tracking-wide drop-shadow-md border-b border-souls-stone/50 pb-6">
+                  {activeTask.title}
+                </h2>
+              )}
+              <div className="min-h-30">
+                {isEditing ? (
                   <textarea
                     rows="4"
                     value={editedDesc}
                     onChange={(e) => setEditedDesc(e.target.value)}
                     placeholder="Inscribe lore for this quest..."
-                    className="w-full bg-transparent text-lg text-souls-paper/90 font-serif italic leading-relaxed resize-none focus:outline-none placeholder:text-souls-paper/30 border-b border-transparent focus:border-souls-estus/50 transition-colors"
+                    className="w-full h-full bg-transparent text-lg text-souls-paper/90 font-serif italic leading-relaxed resize-none focus:outline-none placeholder:text-souls-paper/30 border-b border-souls-stone/50 focus:border-souls-estus/70 transition-colors duration-250"
                   ></textarea>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center">
-                    <span className={`text-xs uppercase tracking-wide px-3 py-1 border shadow-md ${getPriorityColors(activeTask.priority)} `}>
-                      {activeTask.priority === "High" ? "Lord of Cinder (High)" : activeTask.priority === "Medium" ? "Elite (Medium)" : "Hollow (Low)"}
-                    </span>
-                  </div>
-
-                  <h2 className="text-3xl md:text-5xl font-serif text-souls-estus tracking-wide drop-shadow-md border-b border-souls-stone/50 pb-6">
-                    {activeTask.title}
-                  </h2>
-
-                  <div className="min-h-30">
-                    {activeTask.description ? (
-                      <p className="text-lg text-souls-paper/90 font-serif italic leading-relaxed">
-                        "{activeTask.description}"
-                      </p>
-                    ) : (
-                      <p className="text-lg text-souls-paper/30 font-serif italic">
-                        No lore inscribed for this quest...
-                      </p>
-                    )}
-                  </div>
-                </>
-              )}
+                ) : (
+                  activeTask.description ? (
+                    <p className="text-lg text-souls-paper/90 font-serif italic leading-relaxed">
+                      "{activeTask.description}"
+                    </p>
+                  ) : (
+                    <p className="text-lg text-souls-paper/30 font-serif italic">
+                      No lore inscribed for this quest...
+                    </p>
+                  )
+                )}
+              </div>
 
               <div className="flex justify-between items-end mt-4 pt-6 border-t border-souls-stone/30">
-                {!activeTask.completed ? (
-                  isEditing ? (
-                    <PriorityMenu
-                      value={editedPriority}
-                      onChange={(prio) => setEditedPriority(prio)}
-                    />
-                  ) : (
-                <button
-                  onClick={handleComplete}
-                  className="px-6 py-2 border border-souls-estus text-souls-estus hover:bg-souls-estus hover:text-souls-abyss transition-all duration-300 uppercase tracking-wide text-sm cursor-pointer shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                >
-                  Complete Quest
-                </button>
-                  )
-                ) : ( 
-                  <div></div>
-                )}
-
+                <div className="flex-1">
+                  {!activeTask.completed && !isEditing && (
+                    <button
+                      onClick={handleComplete}
+                      className="px-6 py-2 border border-souls-estus text-souls-estus hover:bg-souls-estus hover:text-souls-abyss transition-all duration-300 uppercase tracking-wide text-sm cursor-pointer shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                    >
+                      Complete Quest
+                    </button>
+                  )}
+                </div>
 
                 <div className="flex gap-4">
                   {!activeTask.completed && (isEditing ? (
                     <button
                       onClick={handleSave}
-                      className="px-6 py-2 border border-souls-estus text-souls-estus hover:bg-souls-estus hover:text-souls-abyss transition-all duration-300 uppercase tracking-wider text-sm cursor-pointer"
+                      className="px-6 py-2 border border-souls-estus text-souls-estus hover:bg-souls-estus hover:text-souls-abyss transition-all duration-300 uppercase text-sm cursor-pointer"
                     >
                       Save Lore
                     </button>
                   ) : (
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="px-6 py-2 border border-souls-stone text-souls-paper hover:text-souls-estus hover:border-souls-estus transition-all duration-300 uppercase tracking-wider text-sm cursor-pointer"
+                      className="px-6 py-2 border border-souls-stone text-souls-paper hover:text-souls-estus hover:border-souls-estus transition-all duration-300 uppercase tracking-wide text-sm cursor-pointer"
                     >
                       Alter
                     </button>
-                    )
-                  )}
+                  ))}
+
                   <button
                     onClick={onClose}
-                    className="px-8 py-2 border border-souls-stone text-souls-paper hover:text-souls-abyss hover:bg-souls-estus hover:border-souls-estus transition-all duration-300 uppercase tracking-wider text-sm cursor-pointer"
+                    className="px-8 py-2 border border-souls-stone text-souls-paper hover:text-souls-estus hover:border-souls-estus transition-all duration-300 uppercase text-sm tracking-wide cursor-pointer"
                   >
                     Return
                   </button>
                 </div>
               </div>
             </div>
+
           </motion.div>
         </motion.div>
       )}

@@ -43,7 +43,7 @@ useEffect(() => {
     };
     
     const displayValue = value 
-        ? new Date(value.split('-')[0], value.split('-')[1] - 1, value.split('-')[2].toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }))
+        ? new Date(value.split('-')[0], value.split('-')[1] - 1, value.split('-')[2]).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
         : "No Due Date";
     //like geniunely how tf did these albert einstein ass cavemen invent this
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];

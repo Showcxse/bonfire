@@ -81,6 +81,8 @@ const App = () => {
   const [inspectedTask, setInspectedTask] = useState(null);
   const [newTaskPriority, setNewTaskPriority] = useState("Low");
   const [newTaskDate, setNewTaskDate] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState('All');
+  const [sortCriteria, setSortCriteria] = useState("Default");
 
 
 
@@ -114,6 +116,7 @@ const App = () => {
   const toggleTaskComplete = (taskId) => {
     setTaskCompleteId(taskId);
     setTimeout(() => {
+    if (Math.floor(Math.random() * 1000) === 1) setBannerText('Kill Yourself');
     setBannerText("Task Completed");
 
     setTimeout(() => {
@@ -135,8 +138,15 @@ const App = () => {
     ));
   };
 
-  const activeTasks = tasks.filter(task => !task.completed);
   const completedTasks = tasks.filter(task => task.completed);
+
+  let activeTasks = tasks.filter((task) => !task.completed);
+
+  if (priorityFilter !== 'All') {
+    activeTasks = activeTasks.filter(task => task.priority === priorityFilter);
+  } 
+  //NOTE FOR FUTURE ME. BUILD THIS OUT NEXT
+
 
   return (
     <>
