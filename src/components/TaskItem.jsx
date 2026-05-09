@@ -34,6 +34,7 @@ export const formatDueDate = (dateStr) => {
 const TaskItem = ({ task, onToggle, onInspect, isCompleting }) => {
   return (
     <motion.div
+      layout
       initial={{ opacity: 0, y:50 }}
       whileInView={{ opacity: 1, y: 0}}
       viewport={{ once: true, margin: "-100px" }}

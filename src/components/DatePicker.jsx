@@ -53,12 +53,12 @@ useEffect(() => {
     <div className="relative w-48" ref={menuRef}>
         <div
           onClick={() => setIsOpen(!isOpen)}
-          className='flex items-center justify-between bg-transparent border border-souls-stone p-2 cursor-pointer hover:border-souls-estus/50 transition-colors'
+          className='group flex items-center justify-between bg-transparent border border-souls-stone p-2 cursor-pointer hover:border-souls-estus/50 transition-colors'
         >
         <span className={`font-serif text-sm tracking-wider ${value ? 'text-souls-estus' : 'text-souls-paper'}`}>
             {displayValue}
         </span>
-        <span className="text-souls-stone text-xs">▼</span>
+        <span className={`text-xs transition-all duration-300 group-hover:text-souls-estus ${isOpen ? 'rotate-180 text-souls-estus' : 'text-souls-stone'}`}>▼</span>
         </div>
 
         <AnimatePresence>

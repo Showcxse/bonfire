@@ -6,11 +6,11 @@ import PriorityMenu from "./components/PriorityMenu";
 import DatePicker from "./components/DatePicker";
 import CompletedBanner from "./components/CompletedBanner";
 import EmberBackground from "./components/EmberBackground";
-
+import { AnimatePresence } from "framer-motion";
 import { soulsborneBackgrounds } from "./assets/assets.js";
 import { errorBoundaryAssets } from "./assets/assets.js";
 
-//ERROR BOUNDARY BECAUSE AS I WORK ON THIS MORE AND MORE I REALIZE MY DUMBAHH
+//ERROR BOUNDARY BECAUSE AS I WORK ON THIS MORE AND MORE I REALIZE MY DUMBAHH NEEDS IT
 const globalErrorAudio = new Audio(errorBoundaryAssets.errorSound);
 function ErrorFallback({ error, resetErrorBoundary }) {
 
@@ -83,6 +83,7 @@ const App = () => {
   const [newTaskDate, setNewTaskDate] = useState("");
   const [priorityFilter, setPriorityFilter] = useState('All');
   const [sortCriteria, setSortCriteria] = useState("Default");
+  const [sortDirection, setSortDirection] = useState('desc');
 
 
 
@@ -145,8 +146,21 @@ const App = () => {
   if (priorityFilter !== 'All') {
     activeTasks = activeTasks.filter(task => task.priority === priorityFilter);
   } 
-  //NOTE FOR FUTURE ME. BUILD THIS OUT NEXT
 
+  if (sortCriteria === 'Date') {
+    activeTasks.sort((a, b) => {
+      if (!a.dueDate) return 1; 
+      if (!b.dueDate) return -1;
+      const dateDifference = new Date(a.dueDate) - new Date(b.dueDate);
+      return sortDirection === 'desc' ? dateDifference : -dateDifference;
+    });
+  } else if (sortCriteria === 'Priority') {
+    const prioWeight = { High: 3, Medium: 2, Low: 1};
+    activeTasks.sort((a, b) => {
+      const prioDifference = prioWeight[b.priority] - prioWeight[a.priority];
+      return sortDirection === 'desc' ? prioDifference : -prioDifference;
+    });
+  }
 
   return (
     <>
@@ -216,8 +230,58 @@ const App = () => {
 
         </form>
         </ErrorBoundary>
-        <h3 className="text-souls-estus/90 uppercase text-sm mb-6 text-center">Active Quests</h3>
-
+        <div className="w-full max-w-2xl flex items-center justify-center gap-6 mb-6 mt-8">
+          <div className="h-px flex-1 bg-linear-to-r from-transparent via-souls-stone to-transparent"></div>
+          <h3 className="text-souls-estus/90 uppercase text-lg text-center drop-shadow-[0_0_8px_rgba(212,175,55,0.3)]">Active Quests</h3>
+          <div className="h-px flex-1 bg-linear-to-r from-transparent via-souls-stone to-transparent"></div>
+        </div>
+        
+          <div className="w-full max-w-2xl mb-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-serif border-y border-souls-stone/40 py-3 px-4 bg-black/40 shadow-inner">
+            <div className="flex items-center gap-3">
+              <span className="text-souls-paper uppercase tracking-wider">Filter: </span>
+              {['All', 'High', 'Medium', 'Low'].map(prio => (
+                <button
+                  key={prio}
+                  onClick={() => setPriorityFilter(prio)}
+                  className={`uppercase tracking-wider px-2 py-1 transition-all duration-300 cursor-pointer ${
+                    priorityFilter === prio 
+                      ? 'text-souls-abyss bg-souls-estus shadow-[0_0_10px_rgba(212,175,55,0.4)]'
+                      : 'text-souls-paper/50 hover:text-souls-paper hover:bg-souls-stone/50'
+                  }`}
+                >
+                  {prio === 'High' ? "High" : prio === 'Medium' ? 'Medium' : prio === 'Low' ? 'Low' : 'All'}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-souls-paper uppercase tracking-wider">Sort: </span>
+              {['Default', 'Date', 'Priority'].map(sort => (
+                <button
+                  key={sort}
+                  onClick={() => {
+                    if (sortCriteria === sort && sort!== 'Default') {
+                      setSortDirection(prev => prev === 'desc' ? 'asc' : 'desc');
+                    } else {
+                      setSortCriteria(sort);
+                      setSortDirection('desc');
+                    }
+                  }}
+                  className={`flex items-center uppercase tracking-wider px-2 py-1 transition-all duration-300 cursor-pointer ${
+                    sortCriteria === sort
+                      ? 'text-souls-abyss bg-souls-paper/65 shadow-[0_0_10px_rgba(209,209,196,0.4)]'
+                      : 'text-souls-paper/50 hover:text-souls-paper hover:bg-souls-stone/50'
+                  }`}
+                >
+                  {sort}
+                  {sortCriteria === sort && sort!=='Default' && (
+                    <span className={`text-[10px] ml-1 transition-transform duration-300 ${sortDirection === 'asc' ? 'rotate-180' : 'rotate-0'}`}>
+                      ▼
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
         <div className="w-full max-w-2xl space-y-4 pb-32 ">
           {/* THROW ALL THE TASKS HERE FOR NOW IDK WHERE TO PUT THEM YET TBH
                 NOTE FOR FUTURE ME: MAYBE HAVE HERO / LOADER SCREEN FIRST?
@@ -228,20 +292,27 @@ const App = () => {
               The task list is empty...
             </div>
           ) : (
-            activeTasks.map((task) => (
-              <TaskItem
-                key={task.id}
-                task={task}
-                isCompleting={taskCompleteId === task.id}
-                onToggle={() => toggleTaskComplete(task.id)}
-                onInspect={() => setInspectedTask(task)}
-              />
-            ))
+            <AnimatePresence mode='popLayout'>
+              {activeTasks.map((task) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  isCompleting={taskCompleteId === task.id}
+                  onToggle={() => toggleTaskComplete(task.id)}
+                  onInspect={() => setInspectedTask(task)}
+                />
+              ))}
+            </AnimatePresence>
+
           )}
 
           {completedTasks.length > 0 && (
-            <div className="mt-12 pt-8 border-t border-souls-stone/30">
-              <h3 className="text-souls-estus/80 uppercase text-sm mb-6 text-center">Completed Quests</h3>
+            <div className="mt-12 pt-6 border-t border-souls-stone/30">
+               <div className="w-full max-w-2xl flex items-center justify-center gap-6 mb-6 mt-8">
+                  <div className="h-px flex-1 bg-linear-to-r from-transparent via-souls-stone to-transparent"></div>
+                  <h3 className="text-souls-estus/80 uppercase text-lg mb-6 text-center">Completed Quests</h3>
+                  <div className="h-px flex-1 bg-linear-to-r from-transparent via-souls-stone to-transparent"></div>
+              </div>
               <div className="space-y-4 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
                 {completedTasks.map((task) => (
                   <TaskItem
